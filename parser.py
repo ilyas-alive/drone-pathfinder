@@ -90,8 +90,13 @@ class Parser():
         if zone_b not in [zone.name for zone in zones]:
             raise ValueError(f"No Zone with the name {zone_b}")
 
+        zones_peer = []
+        for name in [zone_a, zone_b]:
+            zones_peer.append([zone for zone in zones if zone.name == name][0])
+            
+
         return {
-                'zones':(zone_a, zone_b),
+                'zones':tuple(zones_peer),
                 'max_link_capacity': max_link_capacity
         }
 
