@@ -5,6 +5,17 @@ class Graph:
         self.end_hub = end_hub
         self.zones = [start_hub, end_hub]
         self.connections = []
+        self.drones = []
+        self.adjust_hubs()
+        self.add_drones()
+
+    def adjust_hubs(self):
+        self.start_hub.max_drones = self.nb_drones
+        self.end_hub.max_drones = self.nb_drones
+
+    def add_drones(self):
+        for i in range(self.nb_drones):
+            self.drones.append(Drone(i, self.start_hub))
 
     def add_hubs(self, hubs):
         for hub in hubs:
