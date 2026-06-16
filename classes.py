@@ -26,6 +26,7 @@ class Graph:
     def add_connections(self, connections:list[str]):
         for connection_data in connections:
             connection = Connection(**connection_data)
+            self.connections.append(connection)
             for zone in connection.zones:
                 zone.update_connection(connection)
 
