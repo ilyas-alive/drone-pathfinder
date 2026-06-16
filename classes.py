@@ -62,3 +62,8 @@ class Connection:
         self.zones = zones
         self.max_link_capacity = max_link_capacity
 
+class Drone:
+    def __init__(self, id, position):
+        self.id: int = id
+        self.position: Zone = position
+        self.moving = False
