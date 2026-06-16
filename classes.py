@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 class Graph:
     def __init__(self, nb_drones:int, start_hub, end_hub):
         self.nb_drones = nb_drones
