@@ -40,18 +40,20 @@ class Zone:
         self.zone = zone
         self.color = color
         self.max_drones = max_drones
-        self.connections = []
-        self.neighbors = {}
+        self.connections:list[Connection] = []
+        self.neighbors: dict[str, tuple[Zone, Connection]] = {}
+
+
 
     def update_neighbors(self, neighbor, connection):
         if neighbor.name not in self.neighbors:
-            self.neighbors.update(neighbor.name: (zone, connection)})
+            self.neighbors.update({neighbor.name: (neighbor, connection)})
         else:
             raise ValueError("Two connections with the same zones")
 
     def update_connection(self, connection):
         self.connections.append(connection)
-        for zones in connection.zones:
+        for zone in connection.zones:
             if zone.name != self.name:
                 self.update_neighbors(zone, connection)
 

@@ -46,6 +46,7 @@ class Parser():
 
         graph.add_hubs([Parser.parse_hub(l) for l in hub_lines])
         graph.add_connections([Parser.parse_connection(l, graph.zones) for l in connection_lines])
+
         return graph
 
     
