@@ -1,4 +1,11 @@
 from __future__ import annotations
+from enum import Enum
+
+class ZoneType(Enum):
+    NORMAL = "normal"
+    BLOCKED = "blocked"
+    RESTRICTED = "restricted"
+    PRIORITY = "priority"
 
 class Zone:
     def __init__(self, name, x, y, zone_type="normal", color="none", max_drones=1):
