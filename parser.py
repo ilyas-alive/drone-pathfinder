@@ -1,104 +1,59 @@
-from classes import Graph, Zone
+from classes import Graph, Zone, Connection
 
-class Parser():
+class Parser:
+    @staticmethod
+    def _split_meta(line):
+        if '[' in line:
+            idx = line.index('[')
+            return line[:idx].strip(), line[idx+1:-1].strip()
+        return line.strip(), ""
+
     @staticmethod
     def parse_file(file_name):
         with open(file_name, 'r') as f:
-            lines = f.read()
+            lines = [line.split('#')[0].strip() for line in f if line.split('#')[0].strip()]
 
-        content = ''
-        data_header = ['nb_drones', 'start_hub', 'end_hub', 'hub', 'connection']
-        data = {'hubs':[], 'connections':[]}
-        header_counter = 0
+        graph = Graph(int(lines[0].split(':')[1]))
 
-        for line in lines.split('\n'):
-            if line.startswith('# ') or not line:
-                continue
-            if not line.startswith(tuple(data_header)):
-                raise ValueError("ERROR data_header")
+        for line in lines[1:]:
+            if line.startswith(('start_hub:', 'end_hub:', 'hub:')):
+                prefix = line.split(':')[0]
+                zone = Parser.parse_hub(line[len(prefix)+1:].strip())
+                graph.add_zone(zone)
+                
+                if prefix == 'start_hub':
+                    graph.start_hub = zone
+                elif prefix == 'end_hub':
+                    graph.end_hub = zone
 
-            if line.startswith('nb_drones'):
-                data['nb_drones'] = int(line.split(':')[1])
+            elif line.startswith('connection:'):
+                conn = Parser.parse_connection(line[11:].strip(), graph)
+                graph.add_connection(conn)
 
-            if line.startswith('start_hub'):
-                data['start_hub'] = line
-            if line.startswith('end_hub'):
-                data['end_hub'] = line
-
-            if line.startswith('hub'):
-                data['hubs'].append(line)
-            if line.startswith('connection'):
-                data['connections'].append(line)
-
-        return data
-
-
-    @staticmethod
-    def build_graph(data):
-        hub_lines = data['hubs']
-        connection_lines = data['connections']
-        start_line = Parser.parse_hub(data['start_hub'])
-        end_line = Parser.parse_hub(data['end_hub'])
-
-        start_hub = Zone(**start_line)
-        end_hub = Zone(**end_line)
-        graph = Graph(data['nb_drones'], start_hub, end_hub)
-
-        graph.add_hubs([Parser.parse_hub(l) for l in hub_lines])
-        graph.add_connections([Parser.parse_connection(l, graph.zones) for l in connection_lines])
-
+        graph.finalize()
         return graph
 
-    
     @staticmethod
     def parse_hub(line):
-        hub_tags = ['max_drones', 'color', 'zone']
-        hub = {}
-        data = line.split(': ')[1:][0]
-        hub['name'] = data.split(' ')[0]
-        hub['x'] = data.split(' ')[1]
-        hub['z'] = data.split(' ')[2]
-
-        attr_str = data.split('[', 1)[1]
-        attr_str = attr_str.split(']', 1)[0] 
-
-        attr = dict(
-            attr.split('=')
-            for attr in attr_str.split()
-            if attr.split('=')[0] in hub_tags
-        )
-        hub.update(attr)
-        return hub
+        data_part, meta_part = Parser._split_meta(line)
+        parts = data_part.split()
+        z_args = {"name": parts[0], "x": int(parts[1]), "y": int(parts[2])}
+        for token in meta_part.split():
+            key, val = token.split('=', 1)
+            if key == 'max_drones': z_args['max_drones'] = int(val)
+            elif key == 'zone': z_args['zone_type'] = val
+            else: z_args[key] = val
+        return Zone(**z_args)
 
     @staticmethod
-    def parse_connection(line, zones):
-        try:
-            connection = line.split(': ')[1].split('[')[0]
-            zone_a, zone_b = connection.split('-')
-            zone_a = zone_a.strip()
-            zone_b = zone_b.strip()
+    def parse_connection(line, graph):
+        conn_part, meta_part = Parser._split_meta(line)
+        za_name, zb_name = [x.strip() for x in conn_part.split('-', 1)]
+        za, zb = graph.get_zone(za_name), graph.get_zone(zb_name)
 
-            max_link_capacity = 1
-            if 'max_link_capacity=' in line:
-                data = line.split('[')[1].split(']')[0]
-                max_link_capacity = int(data.split('=')[1])
+        cap = 1
+        for token in meta_part.split():
+            key, val = token.split('=', 1)
+            if key == 'max_link_capacity': cap = int(val)
 
-        except Exception:
-            raise ValueError("Not a valid connection")
-
-        if zone_a not in [zone.name for zone in zones]:
-            raise ValueError(f"No Zone with the name {zone_a}")
-        if zone_b not in [zone.name for zone in zones]:
-            raise ValueError(f"No Zone with the name {zone_b}")
-
-        zones_peer = []
-        for name in [zone_a, zone_b]:
-            zones_peer.append([zone for zone in zones if zone.name == name][0])
-            
-
-        return {
-                'zones':tuple(zones_peer),
-                'max_link_capacity': max_link_capacity
-        }
-
-
+        return Connection((za, zb), cap)

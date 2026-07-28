@@ -1,13 +1,18 @@
-from parser import Parser as p
-from classes import Graph, Zone
+import sys
+from parser import Parser
+from simulation import Simulation
 
+def main() -> None:
+    if len(sys.argv) < 2:
+        print("Usage: python3 main.py <map_file>")
+        sys.exit(1)
 
-data = p.parse_file("example.txt")
-graph = p.build_graph(data)
-for zone in graph.zones:
-    print(f"={zone.name}:")
-    for k, v in zone.neighbors.items():
-        print("     ", v[0].name, v[1].max_link_capacity)
-for drone in graph.drones:
-    print(drone.id)
-    print("--", drone.position.name)
+    try:
+        graph = Parser.parse_file(sys.argv[1])
+        for movements in Simulation(graph).run():
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

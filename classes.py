@@ -1,55 +1,20 @@
 from __future__ import annotations
 
-class Graph:
-    def __init__(self, nb_drones:int, start_hub, end_hub):
-        self.nb_drones = nb_drones
-        self.start_hub = start_hub
-        self.end_hub = end_hub
-        self.zones = [start_hub, end_hub]
-        self.connections = []
-        self.drones = []
-        self.adjust_hubs()
-        self.add_drones()
-
-    def adjust_hubs(self):
-        self.start_hub.max_drones = self.nb_drones
-        self.end_hub.max_drones = self.nb_drones
-
-    def add_drones(self):
-        for i in range(self.nb_drones):
-            self.drones.append(Drone(i, self.start_hub))
-
-    def add_hubs(self, hubs):
-        for hub in hubs:
-            self.zones.append(Zone(**hub))
-
-    def add_connections(self, connections:list[str]):
-        for connection_data in connections:
-            connection = Connection(**connection_data)
-            self.connections.append(connection)
-            for zone in connection.zones:
-                zone.update_connection(connection)
-
-
 class Zone:
-    def __init__(self, name: str,x: int, z: int,
-        zone: str = "normal", color: str = "none",max_drones: int = 1) -> None:
+    def __init__(self, name, x, y, zone_type="normal", color="none", max_drones=1):
         self.name = name
         self.x = x
-        self.z = z
-        self.zone = zone
+        self.y = y
+        self.zone_type = ZoneType(zone_type)
         self.color = color
         self.max_drones = max_drones
-        self.connections:list[Connection] = []
-        self.neighbors: dict[str, tuple[Zone, Connection]] = {}
-
-
+        self.connections = []
+        self.neighbors = {}
+        self.is_start = False
+        self.is_end = False
 
     def update_neighbors(self, neighbor, connection):
-        if neighbor.name not in self.neighbors:
-            self.neighbors.update({neighbor.name: (neighbor, connection)})
-        else:
-            raise ValueError("Two connections with the same zones")
+        self.neighbors[neighbor.name] = (neighbor, connection)
 
     def update_connection(self, connection):
         self.connections.append(connection)
@@ -58,12 +23,47 @@ class Zone:
                 self.update_neighbors(zone, connection)
 
 class Connection:
-    def __init__(self, zones:tuple, max_link_capacity:int = 1):
+    def __init__(self, zones, max_link_capacity=1):
         self.zones = zones
         self.max_link_capacity = max_link_capacity
 
 class Drone:
-    def __init__(self, id, position):
-        self.id: int = id
-        self.position: Zone = position
-        self.moving = False
+    def __init__(self, drone_id, position):
+        self.id = drone_id
+        self.position = position
+        self.state = "waiting"
+        self.transit_destination = None
+
+    def is_delivered(self):
+        return self.state == "delivered"
+
+class Graph:
+    def __init__(self, nb_drones):
+        self.nb_drones = nb_drones
+        self.start_hub = None
+        self.end_hub = None
+        self.zones = []
+        self.connections = []
+        self.drones = []
+
+    def finalize(self):
+        self.start_hub.max_drones = 999999
+        self.end_hub.max_drones = 999999
+        self.start_hub.is_start = True
+        self.end_hub.is_end = True
+        for i in range(self.nb_drones):
+            self.drones.append(Drone(i + 1, self.start_hub))
+
+    def add_zone(self, zone):
+        self.zones.append(zone)
+
+    def add_connection(self, connection):
+        self.connections.append(connection)
+        for zone in connection.zones:
+            zone.update_connection(connection)
+
+    def get_zone(self, name):
+        for zone in self.zones:
+            if zone.name == name:
+                return zone
+        return None
