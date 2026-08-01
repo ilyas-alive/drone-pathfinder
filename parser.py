@@ -19,19 +19,22 @@ class Parser:
             raise ValueError("First line must be nb_drones")
         
         graph = Graph(int(lines[0].split(':')[1]))
-        seen_connections = set()
+        seen_connections: set[tuple[str, str]] = set()
 
-        for line in lines[1:]:
+        for i, line in enumerate(lines[1:], 2):
             if line.startswith(('start_hub:', 'end_hub:', 'hub:')):
                 prefix = line.split(':')[0]
                 zone = Parser.parse_hub(line[len(prefix)+1:].strip())
+                
                 if graph.get_zone(zone.name):
                     raise ValueError(f"Duplicate zone name: {zone.name}")
                 graph.add_zone(zone)
                 
                 if prefix == 'start_hub':
+                    if graph.start_hub: raise ValueError("Duplicate start_hub")
                     graph.start_hub = zone
                 elif prefix == 'end_hub':
+                    if graph.end_hub: raise ValueError("Duplicate end_hub")
                     graph.end_hub = zone
 
             elif line.startswith('connection:'):
@@ -62,6 +65,7 @@ class Parser:
             else: z_args[key] = val
 
         return Zone(**z_args)
+
 
     @staticmethod
     def parse_connection(line: str, graph: Graph) -> Connection:
