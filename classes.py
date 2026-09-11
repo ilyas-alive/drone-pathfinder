@@ -7,6 +7,19 @@ class ZoneType(Enum):
     RESTRICTED = "restricted"
     PRIORITY = "priority"
 
+COLORS: dict[str, str] = {
+    "red": "\033[91m",
+    "green": "\033[92m",
+    "yellow": "\033[93m",
+    "blue": "\033[36m",
+    "magenta": "\033[95m",
+    "cyan": "\033[96m",
+    "white": "\033[97m",
+    "gray": "\033[90m",
+    "none": "",
+    "reset": "\033[0m"
+}
+
 class Zone:
     def __init__(self, name: str, x: int, y: int, zone_type: str = "normal", color: str = "none", max_drones: int = 1) -> None:
         self.name: str = name
