@@ -1,11 +1,13 @@
 from __future__ import annotations
 from enum import Enum
 
+
 class ZoneType(Enum):
     NORMAL = "normal"
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
+
 
 COLORS: dict[str, str] = {
     "red": "\033[91m",
@@ -20,8 +22,10 @@ COLORS: dict[str, str] = {
     "reset": "\033[0m"
 }
 
+
 class Zone:
-    def __init__(self, name: str, x: int, y: int, zone_type: str = "normal", color: str = "none", max_drones: int = 1) -> None:
+    def __init__(self, name: str, x: int, y: int, zone_type: str = "normal",
+                 color: str = "none", max_drones: int = 1) -> None:
         self.name: str = name
         self.x: int = x
         self.y: int = y
@@ -45,10 +49,13 @@ class Zone:
             if zone.name != self.name:
                 self.update_neighbors(zone, connection)
 
+
 class Connection:
-    def __init__(self, zones: tuple[Zone, Zone], max_link_capacity: int = 1) -> None:
+    def __init__(self, zones: tuple[Zone, Zone],
+                 max_link_capacity: int = 1) -> None:
         self.zones: tuple[Zone, Zone] = zones
         self.max_link_capacity: int = max_link_capacity
+
 
 class Drone:
     def __init__(self, drone_id: int, position: Zone) -> None:
@@ -59,6 +66,7 @@ class Drone:
 
     def is_delivered(self) -> bool:
         return self.state == "delivered"
+
 
 class Graph:
     def __init__(self, nb_drones: int) -> None:
